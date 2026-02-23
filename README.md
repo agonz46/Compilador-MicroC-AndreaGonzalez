@@ -1,164 +1,91 @@
-# ◈ MicroC Compiler — Pre-Compilador
+Compilador MicroC
 
-```
-╔══════════════════════════════════════════════════════════╗
-║          MicroC COMPILER  v1.0  — Pre-Compilador         ║
-║          Universidad Mesoamericana  |  2026              ║
-╚══════════════════════════════════════════════════════════╝
-```
+Nombre: Andrea Gonzalez  
+Carné: 202425508  
+Curso: Autómatas y Lenguajes  
+Proyecto: Pre-Compilador MicroC  
+Catedrático: Ing. Baudilio Boteo  
+Universidad Mesoamericana — 2026
 
----
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## 📋 Portada
+¿De qué va esto?
 
-| Campo | Detalle |
-|-------|---------|
-| **Nombre completo** | _(Tu nombre aquí)_ |
-| **Número de carné** | _(Tu carné aquí)_ |
-| **Curso** | Autómatas y Lenguajes |
-| **Proyecto** | Compilador MicroC — Pre-Compilador |
-| **Catedrático** | Ing. Baudilio Boteo |
-| **Universidad** | Universidad Mesoamericana |
-| **Año** | 2026 |
+Este proyecto es la primera parte del compilador MicroC que vamos construyendo en el curso. Por ahora lo que hice fue la interfaz gráfica completa con todas las funciones que se pidieron, más algunas cosas extra que fui agregando.
 
----
+La idea es que funcione como un editor de código donde puedas abrir, escribir y guardar archivos ".c", y que la consola del lado derecho te muestre mensajes cuando compilás.
 
-## 📌 Descripción del Proyecto
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-**MicroC Compiler** es una aplicación de escritorio con estética **retro-terminal / cyberpunk** que simula la interfaz de un compilador para el lenguaje **MicroC** (subconjunto de C). Esta primera entrega es el **Pre-Compilador**, con interfaz completa, manejo de archivos y análisis léxico básico.
+ Lo que tiene el programa
 
-### Funciones implementadas
+Lo básico que pedía la hoja:
 
-| Función | Descripción |
-|---------|-------------|
-| **Nuevo** | Crea archivo nuevo y habilita el editor |
-| **Abrir** | Carga un `.C` en modo solo lectura con efecto typing |
-| **Guardar** | Guarda con diálogo (nuevo) o sobreescribe (existente) |
-| **Editar** | Habilita la edición del archivo abierto |
-| **Compilar (F5)** | Análisis léxico con reporte detallado |
-| **Stats (Ctrl+T)** | Estadísticas del código en tiempo real |
-| **Ayuda** | Ventana con atajos y documentación |
-| **Salir** | Cierra con verificación de cambios |
+- Podés escribir código nuevo con el botón Nuevo
+- Abrís archivos ".c" y se cargan en modo solo lectura
+- Para editarlos tenés que darle al botón Editar
+- Guardás con el botón Guardar — si es nuevo te pide la ubicación, si ya existe lo sobreescribe
+- La consola muestra los resultados y mensajes
+- El título de la ventana muestra el nombre del archivo que tenés abierto
+- El botón Salir pregunta si tenés cambios sin guardar antes de cerrar
 
-### ✦ Extras sobre los requisitos mínimos
+Cosas extra que le agregué:
 
-- 🎨 **Tema retro-terminal cyberpunk** — fondo negro + neón verde/cian/ámbar
-- ⚡ **Resaltado de sintaxis en tiempo real** — keywords, strings, comentarios, números
-- 🔢 **Numeración de líneas** sincronizada con scroll
-- 📊 **Contador de tokens léxicos en vivo** en la barra de estado
-- 🕐 **Reloj en tiempo real** en la barra superior
-- ⌨️ **Efecto typing** animado al abrir archivos
-- 📈 **Estadísticas del código** (Ctrl+T): líneas, tokens, keywords usadas
-- 🔍 **Análisis léxico detallado** al compilar: tokens, errores, advertencias
-- 🔧 **Auto-indentación** al presionar Enter
-- ↩️ **Deshacer/Rehacer** (Ctrl+Z / Ctrl+Y)
-- 💾 **Indicador de cambios** `[*]` en el título de la ventana
+- Resaltado de sintaxis en tiempo real — se colorean las palabras clave, strings, comentarios y números mientras escribís
+- Números de línea al lado del editor
+- Un contador de tokens que se actualiza solo en la barra de abajo
+- Un reloj arriba a la derecha
+- Cuando abrís un archivo aparece con una animación de typing en vez de cargarse de golpe
+- Con Ctrl+T podés ver estadísticas del código: cuántas líneas tenés, cuántos tokens, qué keywords usaste
+- Al compilar con F5 te dice si hay advertencias o errores básicos
+- Auto-indentación cuando presionás Enter dentro de llaves "{}"
 
----
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## 🛠️ Tecnologías Utilizadas
+Tecnologías
 
-| Tecnología | Uso |
-|-----------|-----|
-| **Python 3.10+** | Lenguaje principal |
-| **Tkinter** | Interfaz gráfica (incluida en Python) |
-| **re (regex)** | Resaltado de sintaxis y análisis léxico |
-| **threading** | Reloj en tiempo real sin bloquear la UI |
-| **os / datetime** | Manejo de archivos y tiempo |
+Usé Python con Tkinter para la interfaz. No tuve que instalar nada extra porque Tkinter ya viene incluido con Python, lo que me facilitó bastante las cosas.
 
-> No requiere instalar librerías externas.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Cómo ejecutarlo
 
----
-
-## ▶️ Instrucciones de Ejecución
-
-### Requisitos
-- Python 3.10 o superior
-
-### Ejecutar
-```bash
-# Clona el repositorio
-git clone https://github.com/TuUsuario/Compilador-MicroC-TuNombreApellido.git
-
-# Entra a la carpeta
-cd Compilador-MicroC-TuNombreApellido
-
-# Ejecuta
+git clone https://github.com/TuUsuario/Compilador-MicroC-AndreaGonzalez.git
+cd Compilador-MicroC-AndreaGonzalez
 python src/microc_compiler.py
-```
 
-### Crear ejecutable .exe (opcional)
-```bash
+
+
+ & C:\Users\sofia\AppData\Local\Programs\Python\Python314\python.exe c:/Users/sofia/Desktop/Compilador-MicroC-SofiaGonzalez/src/microc_compiler.py
+
+
+
+El ".exe":
+
 pip install pyinstaller
 pyinstaller --onefile --windowed --name MicroCCompiler src/microc_compiler.py
-```
-El `.exe` quedará en la carpeta `dist/`.
 
----
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## 📸 Capturas de Pantalla
+## Capturas de pantalla
 
-> _(Agrega tus capturas aquí después de ejecutar el programa)_
+![Pantalla principal](assets/pantalla.png)
 
-Guárdalas en `docs/screenshots/` con nombres como:
-- `pantalla_principal.png`
-- `abrir_archivo.png`
-- `compilar.png`
-- `stats.png`
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
----
+## Video
 
-## 🎬 Video Demostrativo
+🔗 [Ver video demostrativo](#) ← acá va el enlace cuando lo grabe
 
-> 🔗 [Ver video](#) ← _(Reemplaza con tu enlace real de Drive o YouTube)_
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
----
+## Cómo está organizado el repositorio
 
-## 📁 Estructura del Repositorio
-
-```
-Compilador-MicroC-TuNombreApellido/
-│
+Compilador-MicroC-AndreaGonzalez/
 ├── src/
-│   └── microc_compiler.py    ← Código fuente principal
-│
-├── assets/                   ← Recursos (íconos, imágenes)
-│
+│   └── microc_compiler.py
+├── assets/
 ├── docs/
-│   ├── manual_usuario.md     ← Manual de usuario
-│   └── screenshots/          ← Capturas de pantalla
-│
+│   └── manual_usuario.md
 ├── test/
-│   └── prueba.c              ← Archivo de prueba
-│
+│   └── prueba.c
 └── README.md
-```
-
----
-
-## ⌨️ Atajos de Teclado
-
-| Atajo | Función |
-|-------|---------|
-| `Ctrl + N` | Nuevo archivo |
-| `Ctrl + O` | Abrir archivo |
-| `Ctrl + S` | Guardar |
-| `Ctrl + E` | Habilitar edición |
-| `Ctrl + T` | Estadísticas del código |
-| `Ctrl + Z` | Deshacer |
-| `Ctrl + Y` | Rehacer |
-| `F5` | Compilar / Análisis léxico |
-
----
-
-## 🏷️ Release
-
-- **Tag:** `v1.0-precompilador`
-- **Estado:** Pre-Compilador funcional con análisis léxico básico
-- **Próxima entrega:** Analizador sintáctico completo
-
----
-
-## 📜 Licencia
-
-Proyecto académico — Universidad Mesoamericana 2026.
