@@ -79,11 +79,11 @@ https://docs.google.com/videos/d/1bQ2itUNfG70XEA_CDtziJY6sB7LPmkN_mMyYtSGPjrY/ed
 ## Cómo está organizado el repositorio
 
 Compilador-MicroC-AndreaGonzalez/
-├── src/
-│   └── microc_compiler.py
-├── assets/
-├── docs/
-│   └── manual_usuario.md
-├── test/
-│   └── prueba.c
-└── README.md
+-src/
+	microc_compiler.py
+-assets/(imagenes)
+-docs/
+	manual_usuario.md
+-test/
+	prueba.c
+-README.md
