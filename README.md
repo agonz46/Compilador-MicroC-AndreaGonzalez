@@ -49,32 +49,30 @@ Usé Python con Tkinter para la interfaz. No tuve que instalar nada extra porque
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cómo ejecutarlo
 
-git clone https://github.com/TuUsuario/Compilador-MicroC-AndreaGonzalez.git
-cd Compilador-MicroC-AndreaGonzalez
-python src/microc_compiler.py
-
-
-
- & C:\Users\sofia\AppData\Local\Programs\Python\Python314\python.exe c:/Users/sofia/Desktop/Compilador-MicroC-SofiaGonzalez/src/microc_compiler.py
-
-
-
-El ".exe":
-
-pip install pyinstaller
-pyinstaller --onefile --windowed --name MicroCCompiler src/microc_compiler.py
+git clone https://github.com/agonz46/Compilador-MicroC-AndreaGonzalez
+cmd: cd C:\Users\sofia\Desktop\Compilador-MicroC-SofiaGonzalez
+python src\microc_compiler.py
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Capturas de pantalla
 
 ![Pantalla principal](assets/pantalla.png)
+![Pantalla principal](assets/pantalla1.png)
+![Pantalla principal](assets/pantalla2.png)
+![Pantalla principal](assets/pantalla3.png)
+![Pantalla principal](assets/pantalla4.png)
+![Pantalla principal](assets/pantalla5.png)
+![Pantalla principal](assets/pantalla6.png)
+![Pantalla principal](assets/pantalla7.png)
+![Pantalla principal](assets/pantalla8.png)
+![Pantalla principal](assets/pantalla9.png)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Video
 
-🔗 [Ver video demostrativo](#) ← acá va el enlace cuando lo grabe
+https://docs.google.com/videos/d/1bQ2itUNfG70XEA_CDtziJY6sB7LPmkN_mMyYtSGPjrY/edit?usp=sharing
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
