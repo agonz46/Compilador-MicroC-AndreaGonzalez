@@ -1,73 +1,132 @@
-Manual de usuario — MicroC Compiler
+# Manual de usuario — MicroC Compiler v2.0
 
-Acá explico cómo usar el programa por si alguien lo descarga y no sabe por dónde empezar.
+Esta es la segunda versión del compilador MicroC. Ya tiene el analizador léxico completo, así que cuando compilás te genera una tabla con todos los tokens que encontró en el código.
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
 
-Cómo se ve cuando lo abrís
+## Cómo se ve el programa
 
-La ventana está dividida en dos partes. A la izquierda está el editor donde escribís o cargás el código, y a la derecha está la consola que te va mostrando mensajes de lo que va pasando. Arriba hay una barra con todos los botones y abajo una barra chica que te dice en qué línea y columna está el cursor y cuántos tokens tiene el código.
+```
+┌─────────────────────────────────────────────────────────┐
+│  ◈ MicroC COMPILER    ANALIZADOR LÉXICO  |  2026  ⬡ hora│
+├─────────────────────────────────────────────────────────┤
+│ [NUEVO][ABRIR][GUARDAR][GUARDAR COMO][EDITAR][COMPILAR] │
+├──────────────────────────┬──────────────────────────────┤
+│ ◈ EDITOR [TextBox1]      │ ◈ TOKENS [TextBox2]          │
+│                          │                              │
+│  1  │ #include <stdio.h> │ Linea: 1  Lexema: #include  │
+│  2  │ int main() {       │ Token: 100  DIRECTIVA        │
+│  3  │     int a = 5;     │ Linea: 2  Lexema: int        │
+│  4  │ }                  │ Token: 17  PALABRA_RESERVADA │
+├──────────────────────────┴──────────────────────────────┤
+│  SISTEMA LISTO  LÍNEAS: 4   LN:1 COL:1   TOKENS: 12    │
+└─────────────────────────────────────────────────────────┘
+```
 
-Cuando lo abrís por primera vez la consola hace una animación de arranque y te dice que el sistema está listo.
+---
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Los botones
 
-Los botones y qué hace cada uno
+**[ NUEVO ] — Ctrl+N**  
+Limpia el editor y lo pone en modo editable. El indicador arriba a la derecha cambia a verde y dice EDITABLE.
 
-NUEVO — Limpia el editor y te lo deja listo para escribir. El indicador de arriba cambia a verde y dice EDITABLE.
+**[ ABRIR ] — Ctrl+O**  
+Abre el explorador para buscar un archivo `.c`. Cuando lo cargás el texto aparece con una animación de typing. Queda en modo solo lectura.
 
-ABRIR — Abre el explorador de archivos para que busques un ".c". Cuando lo seleccionás el texto aparece con una animación de typing, como si se estuviera escribiendo solo. El archivo queda en modo solo lectura para que no lo edites de casualidad.
+**[ GUARDAR ] — Ctrl+S**  
+Si el archivo ya tiene nombre lo sobreescribe. Si es nuevo te pide dónde guardarlo.
 
-GUARDAR — Si el archivo es nuevo te pregunta dónde guardarlo. Si ya lo habías guardado antes lo sobreescribe sin preguntar. Cuando hay cambios sin guardar el título de la ventana tiene un "[*]" para que te acordés.
+**[ GUARDAR COMO ] — Ctrl+Mayús+S**  
+Siempre abre el explorador para elegir una nueva ubicación, aunque el archivo ya exista.
 
-EDITAR — Si abriste un archivo y querés modificarlo, dale a este botón. El indicador cambia a verde y ya podés escribir.
+**[ EDITAR ] — Ctrl+E**  
+Habilita la edición del archivo que abriste. El indicador cambia a EDITABLE.
 
-COMPILAR (o F5) — Hace un análisis básico del código y te muestra en la consola cuántos tokens encontró, si hay palabras clave, si falta algún punto y coma o si las llaves están desbalanceadas. La compilación completa viene en la siguiente entrega.
+**[ COMPILAR ] — F5**  
+Acá está lo nuevo. Toma el código del editor y lo analiza carácter por carácter. En la consola aparece una tabla con cada token que encontró, con su número de línea, el lexema y el token asignado. Los errores léxicos aparecen en rojo.
 
-STATS (o Ctrl+T) — Te muestra un resumen del código: cuántas líneas tiene, cuántas están vacías, cuántos son comentarios, cuántos caracteres, tokens y qué keywords usaste.
+**[ STATS ] — Ctrl+T**  
+Muestra estadísticas del código: cuántas líneas hay, cuántos tokens, cómo están distribuidos por tipo.
 
-AYUDA — Abre una ventanita con los atajos de teclado y un resumen de las funciones.
+**[ AYUDA ]**  
+Abre una ventana con los atajos y las clases implementadas.
 
-SALIR — Cierra el programa. Si tenés cambios sin guardar te pregunta si querés guardar antes de cerrar.
+**[ SALIR ]**  
+Cierra el programa. Si tenés cambios sin guardar te pregunta antes.
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
 
-Atajos de teclado
+## La tabla de tokens
 
-Ctrl + N: Nuevo archivo
-Ctrl + O: Abrir archivo
-Ctrl + S: Guardar
-Ctrl + E: Habilitar edición
-Ctrl + T: Ver estadísticas
-Ctrl + Z: Deshacer
-Ctrl + Y: Rehacer
-F5: Compilar
+Cuando compilás, la consola muestra algo así:
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+```
+LÍNEA     LEXEMA                TOKEN     TIPO
+───────────────────────────────────────────────────────
+Linea: 1  Lexema: #include      Token: 100  DIRECTIVA
+Linea: 3  Lexema: int           Token: 17   PALABRA_RESERVADA
+Linea: 3  Lexema: main          Token: 399  FUNCION_PRINCIPAL
+Linea: 3  Lexema: (             Token: 75   AGRUPACION
+Linea: 4  Lexema: a             Token: 300  IDENTIFICADOR
+Linea: 4  Lexema: =             Token: 50   ASIGNACION
+Linea: 4  Lexema: 5             Token: 400  NUMERO_ENTERO
+Linea: 17 Lexema: @             Token: -1   SIMBOLO_NO_ENCONTRADO
+```
 
-Los colores del editor
+Los colores en la consola:
+- **Cian** → palabras reservadas y funciones de biblioteca
+- **Rosa** → números enteros y reales
+- **Ámbar** → operadores y símbolos
+- **Blanco** → identificadores
+- **Gris** → comentarios
+- **Rojo** → error léxico (símbolo no reconocido)
 
-Cuando escribís código el editor lo colorea automáticamente:
+---
 
-- Las palabras clave como "int", "return", "if" se ponen en cian
-- Los textos entre comillas "así" se ponen en ámbar
-- Los números se ponen en rosa
-- Las directivas como "#include" se ponen en verde brillante
-- Los comentarios "// así" se ponen en gris oscuro
+## Atajos de teclado
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Atajo | Qué hace |
+|-------|---------|
+| Ctrl+N | Nuevo archivo |
+| Ctrl+O | Abrir archivo |
+| Ctrl+S | Guardar |
+| Ctrl+Mayús+S | Guardar Como |
+| Ctrl+E | Habilitar edición |
+| Ctrl+T | Estadísticas |
+| Ctrl+Z | Deshacer |
+| Ctrl+Y | Rehacer |
+| F5 | Compilar / Análisis léxico |
 
-La barra de abajo
+---
 
+## Cómo probar que funciona
+
+Abrí el programa, dale a Nuevo, pegá esto y presioná F5:
+
+```c
+#include <stdio.h>
+
+int main() {
+    int a = 5;
+    float b = 3.14;
+    // comentario
+    printf("hola");
+    int @ = 10;
+    return 0;
+}
+```
+
+Deberías ver todos los tokens bien clasificados y el `@` en rojo como error léxico.
+
+---
+
+## La barra de estado
+
+```
 SISTEMA LISTO >_     LÍNEAS: 10     LN:3  COL:5     TOKENS: 34
+```
 
-- El mensaje de la izquierda cambia según lo que estás haciendo
-- LÍNEAS te dice cuántas líneas tiene el archivo
-- LN y COL te dicen dónde está el cursor
-- TOKENS se actualiza solo mientras escribís
-
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Una cosa útil
-
-Cuando estás dentro de un bloque con llaves "{}" y presionás Enter, el editor te pone automáticamente la indentación del nivel que corresponde. Si la línea anterior terminaba con "{" te agrega 4 espacios más.
+- Izquierda: mensaje del sistema
+- LÍNEAS: cuántas líneas tiene el archivo
+- LN/COL: posición del cursor
+- TOKENS: se actualiza solo mientras escribís

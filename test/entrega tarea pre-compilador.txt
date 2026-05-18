@@ -1,0 +1,3 @@
+Segunda entrega del Compilador MicroC v2.0 — Analizador Léxico implementado en Python + Tkinter. Se desarrollaron las 3 clases del UML: frmEditor (interfaz gráfica con Fase I del análisis), AnalizadorLexico (motor léxico con árbol de decisión while + ifs y autómatas para identificadores, enteros y comentarios) y UnidadesLexicas (diccionarios de tokens: palabras reservadas, directivas, funciones de biblioteca, operadores y símbolos). La tabla de tokens muestra Linea | Lexema | Token según la Figura V del PDF.
+Repositorio GitHub: https://github.com/agonz46/Compilador-MicroC-AndreaGonzalez
+Andrea Gonzalez | Carné: 202425508

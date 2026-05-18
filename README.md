@@ -1,164 +1,123 @@
-# ◈ MicroC Compiler — Pre-Compilador
+# Compilador MicroC
 
+**Nombre:** Andrea Gonzalez  
+**Carné:** 202425508  
+**Curso:** Autómatas y Lenguajes  
+**Proyecto:** Analizador Léxico MicroC  
+**Catedrático:** Ing. Baudilio Boteo  
+**Universidad Mesoamericana — 2026**
+
+---
+
+## ¿De qué va esto?
+
+Este es el compilador MicroC que hemos ido construyendo en el curso. Esta segunda entrega ya tiene el analizador léxico completo, que es la primera etapa real de un compilador. Lo que hace es leer el código fuente carácter por carácter y clasificar cada cosa que encuentra: si es una palabra reservada, un número, un símbolo, un comentario o un identificador.
+
+El programa tiene dos partes visuales: el editor a la izquierda donde escribís o abrís el código, y la consola a la derecha donde aparece la tabla de tokens cuando compilás.
+
+---
+
+## Clases implementadas
+
+Según el diagrama UML que nos dieron en clase, el programa tiene 3 clases:
+
+**frmEditor** — es la interfaz gráfica, tiene todos los botones y maneja lo que ve el usuario.
+
+**UnidadesLexicas** — es la tabla de tokens. Tiene un diccionario con todas las palabras reservadas de C, las funciones de las bibliotecas (stdio, stdlib, string, math) y todos los símbolos del lenguaje. Tiene dos métodos: `GetTokenPalabra` que busca una palabra y retorna su token (si no la encuentra retorna 300, que significa identificador), y `GetTokenSimbolo` que hace lo mismo pero para símbolos (retorna -1 si no lo encuentra).
+
+**AnalizadorLexico** — es el motor del análisis. Recorre el código carácter por carácter con un while y va decidiendo qué hacer con cada carácter usando ifs. Tiene los métodos `IdentificadorPalabraReservada`, `EnteroReal` y `AutomataComentario` que son los autómatas que se activan según el tipo de carácter que encuentre.
+
+---
+
+## Cómo funciona el análisis (el árbol de decisión)
+
+Cuando le das a Compilar, el programa toma el texto del editor y lo recorre así:
+
+- Si encuentra una letra o guión bajo → llama `IdentificadorPalabraReservada`
+- Si encuentra un número → llama `EnteroReal`  
+- Si encuentra `/` → llama `AutomataComentario` (puede ser `//` o `/* */`)
+- Si encuentra un símbolo → busca en la tabla de `UnidadesLexicas`
+- Si encuentra espacio, tab o salto de línea → lo salta
+- Si no reconoce el carácter → lo marca como error léxico (token -1)
+
+El resultado aparece en la consola con el formato:
 ```
-╔══════════════════════════════════════════════════════════╗
-║          MicroC COMPILER  v1.0  — Pre-Compilador         ║
-║          Universidad Mesoamericana  |  2026              ║
-╚══════════════════════════════════════════════════════════╝
+Linea: 1    Lexema: int    Token: 17    PALABRA_RESERVADA
+Linea: 1    Lexema: main   Token: 399   FUNCION_PRINCIPAL
+Linea: 2    Lexema: (      Token: 75    AGRUPACION
 ```
 
 ---
 
-## 📋 Portada
+## Lo que tiene el programa
 
-| Campo | Detalle |
-|-------|---------|
-| **Nombre completo** | _(Tu nombre aquí)_ |
-| **Número de carné** | _(Tu carné aquí)_ |
-| **Curso** | Autómatas y Lenguajes |
-| **Proyecto** | Compilador MicroC — Pre-Compilador |
-| **Catedrático** | Ing. Baudilio Boteo |
-| **Universidad** | Universidad Mesoamericana |
-| **Año** | 2026 |
+Lo básico que pedía la hoja:
 
----
+- Nuevo, Abrir, Guardar, Guardar Como, Editar, Compilar, Ayuda, Salir
+- Análisis léxico real con tabla de tokens en la consola
+- Identifica palabras reservadas, números enteros y reales, comentarios de línea y bloque, strings, caracteres, identificadores y símbolos
+- Marca en rojo los errores léxicos (símbolos no reconocidos)
 
-## 📌 Descripción del Proyecto
+Cosas extra que tiene:
 
-**MicroC Compiler** es una aplicación de escritorio con estética **retro-terminal / cyberpunk** que simula la interfaz de un compilador para el lenguaje **MicroC** (subconjunto de C). Esta primera entrega es el **Pre-Compilador**, con interfaz completa, manejo de archivos y análisis léxico básico.
-
-### Funciones implementadas
-
-| Función | Descripción |
-|---------|-------------|
-| **Nuevo** | Crea archivo nuevo y habilita el editor |
-| **Abrir** | Carga un `.C` en modo solo lectura con efecto typing |
-| **Guardar** | Guarda con diálogo (nuevo) o sobreescribe (existente) |
-| **Editar** | Habilita la edición del archivo abierto |
-| **Compilar (F5)** | Análisis léxico con reporte detallado |
-| **Stats (Ctrl+T)** | Estadísticas del código en tiempo real |
-| **Ayuda** | Ventana con atajos y documentación |
-| **Salir** | Cierra con verificación de cambios |
-
-### ✦ Extras sobre los requisitos mínimos
-
-- 🎨 **Tema retro-terminal cyberpunk** — fondo negro + neón verde/cian/ámbar
-- ⚡ **Resaltado de sintaxis en tiempo real** — keywords, strings, comentarios, números
-- 🔢 **Numeración de líneas** sincronizada con scroll
-- 📊 **Contador de tokens léxicos en vivo** en la barra de estado
-- 🕐 **Reloj en tiempo real** en la barra superior
-- ⌨️ **Efecto typing** animado al abrir archivos
-- 📈 **Estadísticas del código** (Ctrl+T): líneas, tokens, keywords usadas
-- 🔍 **Análisis léxico detallado** al compilar: tokens, errores, advertencias
-- 🔧 **Auto-indentación** al presionar Enter
-- ↩️ **Deshacer/Rehacer** (Ctrl+Z / Ctrl+Y)
-- 💾 **Indicador de cambios** `[*]` en el título de la ventana
+- Resaltado de sintaxis en tiempo real mientras escribís
+- Numeración de líneas al lado del editor
+- Contador de tokens en vivo en la barra de estado
+- Reloj en tiempo real arriba a la derecha
+- Animación de typing cuando abrís un archivo
+- Estadísticas detalladas con Ctrl+T
+- Auto-indentación al presionar Enter dentro de llaves
+- Guardar Como separado del Guardar normal
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías
 
-| Tecnología | Uso |
-|-----------|-----|
-| **Python 3.10+** | Lenguaje principal |
-| **Tkinter** | Interfaz gráfica (incluida en Python) |
-| **re (regex)** | Resaltado de sintaxis y análisis léxico |
-| **threading** | Reloj en tiempo real sin bloquear la UI |
-| **os / datetime** | Manejo de archivos y tiempo |
-
-> No requiere instalar librerías externas.
+Python con Tkinter. No instalé librerías extra porque Tkinter ya viene con Python.
 
 ---
 
-## ▶️ Instrucciones de Ejecución
+## Cómo ejecutarlo
 
-### Requisitos
-- Python 3.10 o superior
+Necesitás Python 3.10 o más nuevo.
 
-### Ejecutar
 ```bash
-# Clona el repositorio
-git clone https://github.com/TuUsuario/Compilador-MicroC-TuNombreApellido.git
-
-# Entra a la carpeta
-cd Compilador-MicroC-TuNombreApellido
-
-# Ejecuta
+git clone https://github.com/agonz46/Compilador-MicroC-AndreaGonzalez.git
+cd Compilador-MicroC-AndreaGonzalez
 python src/microc_compiler.py
 ```
 
-### Crear ejecutable .exe (opcional)
-```bash
-pip install pyinstaller
-pyinstaller --onefile --windowed --name MicroCCompiler src/microc_compiler.py
-```
-El `.exe` quedará en la carpeta `dist/`.
+---
+
+## Capturas de pantalla
+
+![Pantalla principal](assets/pantalla.png)
+![Editor con código](assets/image1.png)
+![Análisis léxico](assets/image2.png)
+![Análisis léxico](assets/image3.png)
+![Análisis léxico](assets/image4.png)
+---
+
+## Videos
+
+🔗 Pre-Compilador v1.0: https://docs.google.com/videos/d/1bQ2itUNfG70XEA_CDtziJY6sB7LPmkN_mMyYtSGPjrY/edit?usp=sharing
+
+🔗 Analizador Léxico v2.0: https://docs.google.com/videos/d/1qdp8D3H9gQFlDvEh4VQNbqYMSUZopSr-Szs5kzbMapM/edit?usp=sharing, https://docs.google.com/videos/d/1q2K6bboHoPHOuN7l3AKM91zbKcD7KgdV6g6UVIHx__0/edit?usp=sharing
 
 ---
 
-## 📸 Capturas de Pantalla
-
-> _(Agrega tus capturas aquí después de ejecutar el programa)_
-
-Guárdalas en `docs/screenshots/` con nombres como:
-- `pantalla_principal.png`
-- `abrir_archivo.png`
-- `compilar.png`
-- `stats.png`
-
----
-
-## 🎬 Video Demostrativo
-
-> 🔗 [Ver video](#) ← _(Reemplaza con tu enlace real de Drive o YouTube)_
-
----
-
-## 📁 Estructura del Repositorio
+## Estructura del repositorio
 
 ```
-Compilador-MicroC-TuNombreApellido/
-│
+Compilador-MicroC-AndreaGonzalez/
 ├── src/
-│   └── microc_compiler.py    ← Código fuente principal
-│
-├── assets/                   ← Recursos (íconos, imágenes)
-│
+│   └── microc_compiler.py   ← código principal v2.0
+├── assets/
+│   └── pantalla.png ... pantalla9.png
 ├── docs/
-│   ├── manual_usuario.md     ← Manual de usuario
-│   └── screenshots/          ← Capturas de pantalla
-│
+│   └── manual_usuario.md
 ├── test/
-│   └── prueba.c              ← Archivo de prueba
-│
+│   ├── prueba1.c
+│   └── prueba2.c
 └── README.md
 ```
-
----
-
-## ⌨️ Atajos de Teclado
-
-| Atajo | Función |
-|-------|---------|
-| `Ctrl + N` | Nuevo archivo |
-| `Ctrl + O` | Abrir archivo |
-| `Ctrl + S` | Guardar |
-| `Ctrl + E` | Habilitar edición |
-| `Ctrl + T` | Estadísticas del código |
-| `Ctrl + Z` | Deshacer |
-| `Ctrl + Y` | Rehacer |
-| `F5` | Compilar / Análisis léxico |
-
----
-
-## 🏷️ Release
-
-- **Tag:** `v1.0-precompilador`
-- **Estado:** Pre-Compilador funcional con análisis léxico básico
-- **Próxima entrega:** Analizador sintáctico completo
-
----
-
-## 📜 Licencia
-
-Proyecto académico — Universidad Mesoamericana 2026.
