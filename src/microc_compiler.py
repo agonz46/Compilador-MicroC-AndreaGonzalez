@@ -1,19 +1,14 @@
 """
 ╔══════════════════════════════════════════════════════════╗
-║          MicroC COMPILER  v1.0  — Pre-Compilador         ║
-║          Universidad Mesoamericana  |  2026              ║
-║          Autómatas y Lenguajes  —  Ing. Baudilio Boteo   ║
+║       MicroC COMPILER  v2.0  — Analizador Léxico         ║
+║       Universidad Mesoamericana  |  2026                 ║
+║       Autómatas y Lenguajes  —  Ing. Baudilio Boteo      ║
+╠══════════════════════════════════════════════════════════╣
+║  Clases implementadas (diagrama UML):                    ║
+║    • frmEditor       → Interfaz gráfica                  ║
+║    • UnidadesLexicas → Tabla de tokens                   ║
+║    • AnalizadorLexico→ Motor de análisis léxico          ║
 ╚══════════════════════════════════════════════════════════╝
-  Extras únicos:
-    • Resaltado de sintaxis en tiempo real
-    • Numeración de líneas
-    • Contador de tokens léxicos en vivo
-    • Reloj en tiempo real en la barra superior
-    • Animación de "typing" al abrir archivos
-    • Estadísticas del código (Ctrl+T)
-    • Análisis léxico con reporte detallado
-    • Auto-indentación al presionar Enter
-    • Tema retro-terminal Cyberpunk
 """
 
 import tkinter as tk
@@ -30,7 +25,6 @@ NEON_GREEN = "#00ff88"
 NEON_AMBER = "#ffb300"
 NEON_CYAN  = "#00e5ff"
 NEON_PINK  = "#ff0080"
-NEON_BLUE  = "#4488ff"
 DIM_GREEN  = "#00aa55"
 TEXT_MAIN  = "#ccffcc"
 TEXT_DIM   = "#336633"
@@ -40,18 +34,409 @@ KEYWORDS = [
     'int','float','char','void','return','if','else','while',
     'for','do','break','continue','printf','scanf','main',
     'include','define','struct','typedef','switch','case',
-    'default','const','static','extern','sizeof'
+    'default','const','static','extern','sizeof','double',
+    'long','short','unsigned','signed','enum','goto'
 ]
 
+
 # ══════════════════════════════════════════════════════════
-class MicroCCompiler(tk.Tk):
+#  CLASE: UnidadesLexicas
+#  Define las propiedades y funcionalidades de los objetos
+#  para el uso de la tabla de símbolos del lenguaje
+# ══════════════════════════════════════════════════════════
+class UnidadesLexicas:
+
+    def __init__(self):
+        self.Palabra = {}
+        self.Simbolo = {}
+        self._cargar_palabras()
+        self._cargar_simbolos()
+
+    def _cargar_palabras(self):
+        # Palabras reservadas C (tokens 1-32)
+        reservadas = [
+            "auto","break","case","char","const","continue","default",
+            "do","double","else","enum","extern","float","for","goto",
+            "if","int","long","register","return","short","signed",
+            "sizeof","static","struct","switch","typedef","union",
+            "unsigned","void","volatile","while"
+        ]
+        for i, p in enumerate(reservadas, 1):
+            self.Palabra[p] = i
+
+        # Directivas del preprocesador (tokens 100+)
+        directivas = ["#include","#define","#ifdef","#ifndef",
+                      "#endif","#if","#else","#elif","#pragma","#undef"]
+        for i, d in enumerate(directivas, 100):
+            self.Palabra[d] = i
+
+        # Funciones stdio.h (tokens 200+)
+        stdio = ["printf","scanf","fprintf","fscanf","sprintf","sscanf",
+                 "fopen","fclose","fread","fwrite","fgets","fputs",
+                 "getchar","putchar","gets","puts","feof","fflush"]
+        for i, f in enumerate(stdio, 200):
+            self.Palabra[f] = i
+
+        # Funciones stdlib.h (tokens 250+)
+        stdlib = ["malloc","calloc","realloc","free","exit","atoi",
+                  "atof","atol","rand","srand","abs","system"]
+        for i, f in enumerate(stdlib, 250):
+            self.Palabra[f] = i
+
+        # Funciones string.h (tokens 270+)
+        string_h = ["strlen","strcpy","strcat","strcmp","strncpy",
+                    "strncat","strncmp","strchr","strstr","strtok"]
+        for i, f in enumerate(string_h, 270):
+            self.Palabra[f] = i
+
+        # Funciones math.h (tokens 290+)
+        math_h = ["sqrt","pow","ceil","floor","sin","cos",
+                  "tan","log","log10","exp"]
+        for i, f in enumerate(math_h, 290):
+            self.Palabra[f] = i
+
+        # main es especial
+        self.Palabra["main"] = 399
+
+    def _cargar_simbolos(self):
+        # Operadores aritméticos (40+)
+        self.Simbolo["+"]  = 40
+        self.Simbolo["-"]  = 41
+        self.Simbolo["*"]  = 42
+        self.Simbolo["/"]  = 43
+        self.Simbolo["%"]  = 44
+        # Asignación / incremental / decremental (50+)
+        self.Simbolo["="]  = 50
+        self.Simbolo["+="] = 51
+        self.Simbolo["-="] = 52
+        self.Simbolo["*="] = 53
+        self.Simbolo["/="] = 54
+        self.Simbolo["++"] = 55
+        self.Simbolo["--"] = 56
+        # Operadores relacionales (60+)
+        self.Simbolo["=="] = 60
+        self.Simbolo["!="] = 61
+        self.Simbolo["<"]  = 62
+        self.Simbolo[">"]  = 63
+        self.Simbolo["<="] = 64
+        self.Simbolo[">="] = 65
+        # Operadores lógicos (70+)
+        self.Simbolo["&&"] = 70
+        self.Simbolo["||"] = 71
+        self.Simbolo["!"]  = 72
+        # Agrupación (75+)
+        self.Simbolo["("]  = 75
+        self.Simbolo[")"]  = 76
+        self.Simbolo["{"]  = 77
+        self.Simbolo["}"]  = 78
+        self.Simbolo["["]  = 79
+        self.Simbolo["]"]  = 80
+        # Misceláneos (85+)
+        self.Simbolo["\\n"] = 85
+        self.Simbolo["\\t"] = 86
+        self.Simbolo[";"]  = 92
+        self.Simbolo[","]  = 93
+        self.Simbolo["."]  = 94
+        self.Simbolo[":"]  = 95
+        self.Simbolo["?"]  = 96
+        self.Simbolo["#"]  = 97
+        self.Simbolo["&"]  = 98
+        self.Simbolo["|"]  = 99
+
+    def GetTokenPalabra(self, Lexema: str) -> int:
+        """Retorna token de una palabra. 300 = identificador."""
+        return self.Palabra.get(Lexema, 300)
+
+    def GetTokenSimbolo(self, Lexema: str) -> int:
+        """Retorna token de un símbolo. -1 = no encontrado."""
+        return self.Simbolo.get(Lexema, -1)
+
+
+# ══════════════════════════════════════════════════════════
+#  CLASE: AnalizadorLexico
+#  Define las propiedades y funcionalidades de los objetos
+#  para el uso del analizador léxico
+# ══════════════════════════════════════════════════════════
+class AnalizadorLexico:
+
+    def __init__(self):
+        self.Lista = []
+        self.cont  = 0
+        self.Linea = 1
+
+    def GetAlfabetoAlfanumerico(self, c: str) -> int:
+        """Retorna 1 si el carácter es letra o guión bajo."""
+        return 1 if (c.isalpha() or c == '_') else 0
+
+    def GetAlfabetoNumero(self, c: str) -> int:
+        """Retorna 1 si el carácter es dígito o punto."""
+        return 1 if (c.isdigit() or c == '.') else 0
+
+    def GetAlfabetoSimbolo(self, c: str) -> int:
+        """Retorna 1 si el carácter es símbolo del lenguaje."""
+        return 1 if c in set('=+-*/%<>!&|;,(){}[]:.?#^~') else 0
+
+    def IdentificadorPalabraReservada(self, Archivo: str, UL: UnidadesLexicas):
+        """
+        Autómata para palabras reservadas e identificadores.
+        Lee caracteres alfanuméricos y consulta la tabla.
+        """
+        lexema = ""
+        while self.cont < len(Archivo):
+            c = Archivo[self.cont]
+            if c.isalnum() or c == '_':
+                lexema += c
+                self.cont += 1
+            else:
+                break
+
+        token = UL.GetTokenPalabra(lexema)
+
+        if token == 300:
+            tipo = "IDENTIFICADOR"
+        elif 1 <= token <= 32:
+            tipo = "PALABRA_RESERVADA"
+        elif 100 <= token <= 109:
+            tipo = "DIRECTIVA"
+        elif 200 <= token <= 299:
+            tipo = "FUNCION_BIBLIOTECA"
+        elif token == 399:
+            tipo = "FUNCION_PRINCIPAL"
+        else:
+            tipo = "IDENTIFICADOR"
+
+        self.Lista.append({
+            "linea": self.Linea, "lexema": lexema,
+            "token": token,      "tipo":   tipo
+        })
+
+    def EnteroReal(self, Archivo: str, UL: UnidadesLexicas):
+        """
+        Autómata para números enteros y reales.
+        Lee dígitos y punto decimal.
+        """
+        lexema  = ""
+        es_real = False
+
+        while self.cont < len(Archivo):
+            c = Archivo[self.cont]
+            if c.isdigit():
+                lexema += c
+                self.cont += 1
+            elif c == '.' and not es_real:
+                es_real = True
+                lexema += c
+                self.cont += 1
+            else:
+                break
+
+        if lexema:
+            token = 401 if es_real else 400
+            tipo  = "NUMERO_REAL" if es_real else "NUMERO_ENTERO"
+            self.Lista.append({
+                "linea": self.Linea, "lexema": lexema,
+                "token": token,      "tipo":   tipo
+            })
+
+    def AutomataComentario(self, Archivo: str):
+        """
+        Autómata para comentarios de línea (//) y bloque (/* */).
+        Los elimina del análisis y actualiza el contador de líneas.
+        """
+        self.cont += 1  # saltar el primer '/'
+        if self.cont >= len(Archivo):
+            return
+
+        sig = Archivo[self.cont]
+
+        if sig == '/':
+            # Comentario de línea → ignorar hasta \n
+            self.cont += 1
+            while self.cont < len(Archivo) and Archivo[self.cont] != '\n':
+                self.cont += 1
+            self.Lista.append({
+                "linea": self.Linea, "lexema": "//...",
+                "token": 500,        "tipo":   "COMENTARIO_LINEA"
+            })
+
+        elif sig == '*':
+            # Comentario de bloque → ignorar hasta */
+            self.cont += 1
+            linea_inicio = self.Linea
+            while self.cont < len(Archivo) - 1:
+                if Archivo[self.cont] == '\n':
+                    self.Linea += 1
+                if Archivo[self.cont] == '*' and Archivo[self.cont+1] == '/':
+                    self.cont += 2
+                    break
+                self.cont += 1
+            self.Lista.append({
+                "linea": linea_inicio, "lexema": "/*...*/",
+                "token": 501,          "tipo":   "COMENTARIO_BLOQUE"
+            })
+        else:
+            # Era solo el operador '/'
+            self.Lista.append({
+                "linea": self.Linea, "lexema": "/",
+                "token": 43,         "tipo":   "OPERADOR_ARITMETICO"
+            })
+
+    def AnalisisLexico(self, Archivo: str, UL: UnidadesLexicas) -> list:
+        """
+        Motor principal — árbol de decisión (while + ifs).
+        Sigue el diagrama de flujo Figura III, IV, V del PDF.
+
+        Flujo:
+        1. Copiar TextBox1 en variable Archivo
+        2. Instanciar AnalizadorLexico y UnidadesLexicas
+        3. Recorrer Archivo carácter por carácter (while)
+        4. Por cada carácter, decidir qué autómata llamar (ifs)
+        5. Agregar token a Lista
+        6. Retornar Lista → TextBox2
+        """
+        self.Lista = []
+        self.cont  = 0
+        self.Linea = 1
+
+        # ── ÁRBOL DE DECISIÓN ──────────────────────────────
+        while self.cont < len(Archivo):
+            c = Archivo[self.cont]
+
+            # Salto de línea → incrementar contador
+            if c == '\n':
+                self.Linea += 1
+                self.cont  += 1
+                continue
+
+            # Espacios, tabuladores, retornos → eliminar
+            if c in (' ', '\t', '\r'):
+                self.cont += 1
+                continue
+
+            # Letra o guión bajo → IdentificadorPalabraReservada
+            if self.GetAlfabetoAlfanumerico(c):
+                self.IdentificadorPalabraReservada(Archivo, UL)
+                continue
+
+            # Directiva del preprocesador (#include, #define...)
+            if c == '#':
+                lexema = '#'
+                self.cont += 1
+                while self.cont < len(Archivo) and Archivo[self.cont].isalpha():
+                    lexema += Archivo[self.cont]
+                    self.cont += 1
+                token = UL.GetTokenPalabra(lexema)
+                self.Lista.append({
+                    "linea": self.Linea, "lexema": lexema,
+                    "token": token,      "tipo":   "DIRECTIVA"
+                })
+                continue
+
+            # Número → EnteroReal
+            if c.isdigit():
+                self.EnteroReal(Archivo, UL)
+                continue
+
+            # Diagonal → posible comentario
+            if c == '/':
+                self.AutomataComentario(Archivo)
+                continue
+
+            # String entre comillas dobles
+            if c == '"':
+                lexema = '"'
+                self.cont += 1
+                while self.cont < len(Archivo) and Archivo[self.cont] != '"':
+                    if Archivo[self.cont] == '\n':
+                        self.Linea += 1
+                    lexema += Archivo[self.cont]
+                    self.cont += 1
+                if self.cont < len(Archivo):
+                    lexema += '"'
+                    self.cont += 1
+                self.Lista.append({
+                    "linea": self.Linea, "lexema": lexema,
+                    "token": 502,        "tipo":   "CADENA"
+                })
+                continue
+
+            # Carácter entre comillas simples
+            if c == "'":
+                lexema = "'"
+                self.cont += 1
+                while self.cont < len(Archivo) and Archivo[self.cont] != "'":
+                    lexema += Archivo[self.cont]
+                    self.cont += 1
+                if self.cont < len(Archivo):
+                    lexema += "'"
+                    self.cont += 1
+                self.Lista.append({
+                    "linea": self.Linea, "lexema": lexema,
+                    "token": 503,        "tipo":   "CARACTER"
+                })
+                continue
+
+            # Símbolo → revisar si es de 2 caracteres primero
+            if self.GetAlfabetoSimbolo(c):
+                lexema = c
+                if self.cont + 1 < len(Archivo):
+                    dos = c + Archivo[self.cont + 1]
+                    if dos in ('==','!=','<=','>=','&&','||',
+                               '++','--','+=','-=','*=','/=','->'):
+                        lexema = dos
+                        self.cont += 2
+                    else:
+                        self.cont += 1
+                else:
+                    self.cont += 1
+
+                token = UL.GetTokenSimbolo(lexema)
+                if token == -1:
+                    tipo = "SIMBOLO_NO_ENCONTRADO"
+                elif token in range(40, 45):
+                    tipo = "OPERADOR_ARITMETICO"
+                elif token in range(50, 57):
+                    tipo = "ASIGNACION"
+                elif token in range(60, 66):
+                    tipo = "OPERADOR_RELACIONAL"
+                elif token in range(70, 73):
+                    tipo = "OPERADOR_LOGICO"
+                elif token in range(75, 81):
+                    tipo = "AGRUPACION"
+                else:
+                    tipo = "SIMBOLO"
+
+                self.Lista.append({
+                    "linea": self.Linea, "lexema": lexema,
+                    "token": token,      "tipo":   tipo
+                })
+                continue
+
+            # Carácter no reconocido
+            self.Lista.append({
+                "linea": self.Linea, "lexema": c,
+                "token": -1,         "tipo":   "DESCONOCIDO"
+            })
+            self.cont += 1
+
+        return self.Lista
+
+
+# ══════════════════════════════════════════════════════════
+#  CLASE: frmEditor
+#  Define los objetos para el frame / visualización gráfica
+#  del compilador con los botones mínimos para su funcionamiento
+# ══════════════════════════════════════════════════════════
+class frmEditor(tk.Tk):
+
     def __init__(self):
         super().__init__()
-        self.title("MicroC COMPILER v1.0")
+        self.title("MicroC COMPILER v2.0 — Analizador Léxico")
         self.geometry("1280x760")
         self.configure(bg=BG_MAIN)
         self.minsize(900, 600)
 
+        self.Archivo        = ""
         self.current_file   = None
         self.is_new_file    = True
         self.is_editable    = False
@@ -66,7 +451,6 @@ class MicroCCompiler(tk.Tk):
 
     # ──────────────────────────────────────────────────────
     def _build_ui(self):
-        # MENÚ
         menubar = tk.Menu(self, bg=BG_HEADER, fg=NEON_GREEN,
                           activebackground=NEON_GREEN, activeforeground=BG_MAIN,
                           relief="flat", bd=0, font=("Courier New", 10))
@@ -83,27 +467,27 @@ class MicroCCompiler(tk.Tk):
                     m.add_command(label=it[0], command=it[1])
             menubar.add_cascade(label=label, menu=m)
 
-        make_menu("[ ARCHIVO ]", [
-            ("  >> NUEVO          Ctrl+N", self.cmd_nuevo),
-            ("  >> ABRIR          Ctrl+O", self.cmd_abrir),
-            ("  >> GUARDAR        Ctrl+S", self.cmd_guardar),
+        make_menu("[ ARCHIVOS ]", [
+            ("  >> NUEVO              Ctrl+N",    self.OpcNuevo_Click),
+            ("  >> ABRIR              Ctrl+O",    self.OpcAbrir_Click),
+            ("  >> GUARDAR            Ctrl+S",    self.OpcGuardar_Click),
+            ("  >> GUARDAR COMO  Ctrl+Mayús+S",   self.OpcGuardarComo_Click),
             "---",
-            ("  >> ESTADÍSTICAS   Ctrl+T", self.cmd_stats),
-            "---",
-            ("  >> SALIR", self.cmd_salir),
+            ("  >> SALIR",                        self.OpcSalir_Click),
         ])
         make_menu("[ EDITAR ]", [
-            ("  >> HABILITAR EDICIÓN  Ctrl+E", self.cmd_editar),
-            ("  >> DESHACER           Ctrl+Z", lambda: self.txt_editor.edit_undo()),
-            ("  >> REHACER            Ctrl+Y", lambda: self.txt_editor.edit_redo()),
+            ("  >> HABILITAR EDICIÓN  Ctrl+E",    self.cmd_editar),
+            ("  >> DESHACER           Ctrl+Z",    lambda: self.txt_editor.edit_undo()),
+            ("  >> REHACER            Ctrl+Y",    lambda: self.txt_editor.edit_redo()),
         ])
         make_menu("[ COMPILAR ]", [
-            ("  >> COMPILAR  F5",      self.cmd_compilar),
-            ("  >> LIMPIAR CONSOLA",   self._limpiar_consola),
+            ("  >> COMPILAR           F5",        self.compilarToolStripMenuItem_Click),
+            ("  >> LIMPIAR CONSOLA",              self._limpiar_consola),
+            ("  >> ESTADÍSTICAS       Ctrl+T",    self.cmd_stats),
         ])
         make_menu("[ AYUDA ]", [
-            ("  >> ATAJOS / AYUDA",    self.cmd_ayuda),
-            ("  >> ACERCA DE",         self.cmd_acerca),
+            ("  >> AYUDA / ATAJOS",               self.cmd_ayuda),
+            ("  >> ACERCA DE",                    self.cmd_acerca),
         ])
 
         # HEADER
@@ -113,7 +497,7 @@ class MicroCCompiler(tk.Tk):
         tk.Label(header, text="◈ MicroC COMPILER",
                  bg=BG_HEADER, fg=NEON_GREEN,
                  font=("Courier New", 16, "bold")).pack(side="left", padx=16)
-        tk.Label(header, text="PRE-COMPILADOR  |  UNIV. MESOAMERICANA  |  2026",
+        tk.Label(header, text="ANALIZADOR LÉXICO  |  UNIV. MESOAMERICANA  |  2026",
                  bg=BG_HEADER, fg=DIM_GREEN,
                  font=("Courier New", 9)).pack(side="left", padx=4)
         self.lbl_clock = tk.Label(header, text="",
@@ -128,20 +512,21 @@ class MicroCCompiler(tk.Tk):
         toolbar.pack_propagate(False)
 
         btns = [
-            ("[ NUEVO ]",    self.cmd_nuevo,    NEON_GREEN),
-            ("[ ABRIR ]",    self.cmd_abrir,    NEON_GREEN),
-            ("[ GUARDAR ]",  self.cmd_guardar,  NEON_GREEN),
-            ("[ EDITAR ]",   self.cmd_editar,   NEON_AMBER),
-            ("[ COMPILAR ]", self.cmd_compilar, NEON_CYAN),
-            ("[ STATS ]",    self.cmd_stats,    NEON_PINK),
-            ("[ AYUDA ]",    self.cmd_ayuda,    DIM_GREEN),
-            ("[ SALIR ]",    self.cmd_salir,    NEON_PINK),
+            ("[ NUEVO ]",       self.OpcNuevo_Click,                 NEON_GREEN),
+            ("[ ABRIR ]",       self.OpcAbrir_Click,                 NEON_GREEN),
+            ("[ GUARDAR ]",     self.OpcGuardar_Click,               NEON_GREEN),
+            ("[ GUARDAR COMO ]",self.OpcGuardarComo_Click,           NEON_GREEN),
+            ("[ EDITAR ]",      self.cmd_editar,                     NEON_AMBER),
+            ("[ COMPILAR ]",    self.compilarToolStripMenuItem_Click, NEON_CYAN),
+            ("[ STATS ]",       self.cmd_stats,                      NEON_PINK),
+            ("[ AYUDA ]",       self.cmd_ayuda,                      DIM_GREEN),
+            ("[ SALIR ]",       self.OpcSalir_Click,                 NEON_PINK),
         ]
         for text, cmd, color in btns:
             b = tk.Button(toolbar, text=text, command=cmd,
                           bg=BG_PANEL, fg=color, relief="flat", bd=0,
-                          font=("Courier New", 9, "bold"),
-                          padx=10, pady=8, cursor="hand2",
+                          font=("Courier New", 8, "bold"),
+                          padx=8, pady=8, cursor="hand2",
                           activebackground=color, activeforeground=BG_MAIN)
             b.pack(side="left", padx=1)
             b.bind("<Enter>", lambda e, btn=b, c=color: btn.config(bg=c, fg=BG_MAIN))
@@ -153,7 +538,7 @@ class MicroCCompiler(tk.Tk):
         main = tk.Frame(self, bg=BG_MAIN)
         main.pack(fill="both", expand=True)
 
-        # PANEL IZQUIERDO — editor
+        # PANEL IZQUIERDO — TextBox1
         left = tk.Frame(main, bg=BG_MAIN)
         left.pack(side="left", fill="both", expand=True)
 
@@ -212,15 +597,15 @@ class MicroCCompiler(tk.Tk):
         # DIVISOR
         tk.Frame(main, bg=NEON_GREEN, width=1).pack(side="left", fill="y")
 
-        # PANEL DERECHO — consola
-        right = tk.Frame(main, bg=BG_MAIN, width=420)
+        # PANEL DERECHO — TextBox2
+        right = tk.Frame(main, bg=BG_MAIN, width=460)
         right.pack(side="right", fill="both")
         right.pack_propagate(False)
 
         con_hdr = tk.Frame(right, bg=BG_HEADER, height=28)
         con_hdr.pack(fill="x")
         con_hdr.pack_propagate(False)
-        tk.Label(con_hdr, text=" ◈ CONSOLA  [ TextBox2 ]",
+        tk.Label(con_hdr, text=" ◈ TOKENS  [ TextBox2 ]",
                  bg=BG_HEADER, fg=NEON_CYAN,
                  font=("Courier New", 9, "bold")).pack(side="left", padx=8)
         tk.Button(con_hdr, text="[ CLR ]", command=self._limpiar_consola,
@@ -254,17 +639,14 @@ class MicroCCompiler(tk.Tk):
                                     bg=BG_HEADER, fg=NEON_GREEN,
                                     font=("Courier New", 9), anchor="w")
         self.lbl_status.pack(side="left", fill="x", expand=True, padx=4)
-
         self.lbl_tokens = tk.Label(status, text="TOKENS: 0",
                                     bg=BG_HEADER, fg=NEON_AMBER,
                                     font=("Courier New", 9))
         self.lbl_tokens.pack(side="right", padx=8)
-
         self.lbl_cursor = tk.Label(status, text="LN:1  COL:1",
                                     bg=BG_HEADER, fg=NEON_CYAN,
                                     font=("Courier New", 9))
         self.lbl_cursor.pack(side="right", padx=8)
-
         self.lbl_lines = tk.Label(status, text="LÍNEAS: 0",
                                    bg=BG_HEADER, fg=DIM_GREEN,
                                    font=("Courier New", 9))
@@ -281,22 +663,29 @@ class MicroCCompiler(tk.Tk):
         self.txt_editor.tag_configure("operator", foreground=NEON_AMBER)
         self.txt_editor.tag_configure("brace",    foreground=NEON_GREEN, font=("Courier New", 12, "bold"))
 
-        self.txt_output.tag_configure("ok",     foreground=NEON_GREEN)
-        self.txt_output.tag_configure("error",  foreground=NEON_PINK)
-        self.txt_output.tag_configure("warn",   foreground=NEON_AMBER)
-        self.txt_output.tag_configure("info",   foreground=NEON_CYAN)
-        self.txt_output.tag_configure("dim",    foreground=DIM_GREEN)
-        self.txt_output.tag_configure("accent", foreground=NEON_GREEN, font=("Courier New", 11, "bold"))
+        self.txt_output.tag_configure("ok",        foreground=NEON_GREEN)
+        self.txt_output.tag_configure("error",     foreground=NEON_PINK)
+        self.txt_output.tag_configure("warn",      foreground=NEON_AMBER)
+        self.txt_output.tag_configure("info",      foreground=NEON_CYAN)
+        self.txt_output.tag_configure("dim",       foreground=DIM_GREEN)
+        self.txt_output.tag_configure("accent",    foreground=NEON_GREEN, font=("Courier New", 11, "bold"))
+        self.txt_output.tag_configure("kw",        foreground=NEON_CYAN)
+        self.txt_output.tag_configure("num",       foreground=NEON_PINK)
+        self.txt_output.tag_configure("sym",       foreground=NEON_AMBER)
+        self.txt_output.tag_configure("id",        foreground=TEXT_MAIN)
+        self.txt_output.tag_configure("err_tok",   foreground=NEON_PINK,  font=("Courier New", 11, "bold"))
+        self.txt_output.tag_configure("com_tag",   foreground=TEXT_DIM)
 
     # ──────────────────────────────────────────────────────
     def _bind_events(self):
-        self.bind("<Control-n>", lambda e: self.cmd_nuevo())
-        self.bind("<Control-o>", lambda e: self.cmd_abrir())
-        self.bind("<Control-s>", lambda e: self.cmd_guardar())
+        self.bind("<Control-n>", lambda e: self.OpcNuevo_Click())
+        self.bind("<Control-o>", lambda e: self.OpcAbrir_Click())
+        self.bind("<Control-s>", lambda e: self.OpcGuardar_Click())
+        self.bind("<Control-S>", lambda e: self.OpcGuardarComo_Click())
         self.bind("<Control-e>", lambda e: self.cmd_editar())
         self.bind("<Control-t>", lambda e: self.cmd_stats())
-        self.bind("<F5>",        lambda e: self.cmd_compilar())
-        self.protocol("WM_DELETE_WINDOW", self.cmd_salir)
+        self.bind("<F5>",        lambda e: self.compilarToolStripMenuItem_Click())
+        self.protocol("WM_DELETE_WINDOW", self.OpcSalir_Click)
         self.txt_editor.bind("<KeyRelease>",    self._on_key)
         self.txt_editor.bind("<ButtonRelease>", self._update_cursor)
         self.txt_editor.bind("<Return>",        self._auto_indent)
@@ -343,7 +732,7 @@ class MicroCCompiler(tk.Tk):
     def _update_title(self):
         mod  = " [*]" if self.is_modified else ""
         name = os.path.basename(self.current_file) if self.current_file else "sin-titulo.c"
-        self.title(f"MicroC COMPILER v1.0  —  {name}{mod}")
+        self.title(f"MicroC COMPILER v2.0  —  {name}{mod}")
         self.lbl_file.config(text=name + mod)
 
     def _start_clock(self):
@@ -360,20 +749,20 @@ class MicroCCompiler(tk.Tk):
     def _boot_sequence(self):
         msgs = [
             ("╔══════════════════════════════════════════╗\n", "accent"),
-            ("║     MicroC COMPILER  v1.0                ║\n", "accent"),
-            ("║     Pre-Compilador  —  2026              ║\n", "accent"),
+            ("║   MicroC COMPILER  v2.0                  ║\n", "accent"),
+            ("║   Analizador Léxico  —  2026             ║\n", "accent"),
             ("╚══════════════════════════════════════════╝\n", "accent"),
             ("\n", "dim"),
-            ("[ OK ] Iniciando sistema...\n",        "ok"),
-            ("[ OK ] Cargando módulo editor...\n",   "ok"),
-            ("[ OK ] Resaltado de sintaxis listo\n", "ok"),
-            ("[ OK ] Analizador léxico en espera\n", "ok"),
+            ("[ OK ] Cargando UnidadesLexicas...\n",   "ok"),
+            ("[ OK ] Cargando AnalizadorLexico...\n",  "ok"),
+            ("[ OK ] Tabla de tokens lista\n",         "ok"),
+            ("[ OK ] Resaltado de sintaxis activo\n",  "ok"),
             ("\n", "dim"),
             ("─────────────────────────────────────────\n", "dim"),
-            (" ATAJOS:  Ctrl+N  Ctrl+O  Ctrl+S  F5\n", "info"),
+            (" F5 = Compilar  |  Ctrl+T = Stats\n",       "info"),
             ("─────────────────────────────────────────\n", "dim"),
             ("\n", "dim"),
-            (" > SISTEMA LISTO. ESPERANDO CÓDIGO...\n", "accent"),
+            (" > LISTO. ESPERANDO CÓDIGO...\n",           "accent"),
         ]
         def show(i=0):
             if i < len(msgs):
@@ -381,7 +770,6 @@ class MicroCCompiler(tk.Tk):
                 self.after(60, lambda: show(i + 1))
         self.after(300, lambda: show())
 
-    # ──────────────────────────────────────────────────────
     def _highlight_syntax(self):
         for tag in ("keyword","string","comment","number","include","operator","brace"):
             self.txt_editor.tag_remove(tag, "1.0", tk.END)
@@ -408,13 +796,15 @@ class MicroCCompiler(tk.Tk):
                 self.txt_editor.tag_add("operator", f"{ln}{m.start()}", f"{ln}{m.end()}")
 
     # ──────────────────────────────────────────────────────
-    #  COMANDOS
+    #  FUNCIONES PRINCIPALES (nombres según diagrama UML)
     # ──────────────────────────────────────────────────────
-    def cmd_nuevo(self):
+
+    def OpcNuevo_Click(self):
         if self.is_modified and not self._ask_save():
             return
         self.txt_editor.config(state="normal")
         self.txt_editor.delete("1.0", tk.END)
+        self.Archivo      = ""
         self.current_file = None
         self.is_new_file  = True
         self.is_editable  = True
@@ -425,12 +815,12 @@ class MicroCCompiler(tk.Tk):
         self._set_status("NUEVO ARCHIVO — EDITOR HABILITADO >_")
         self._log("\n> NUEVO ARCHIVO CREADO.\n", "accent")
 
-    def cmd_abrir(self):
+    def OpcAbrir_Click(self):
         if self.is_modified and not self._ask_save():
             return
         path = filedialog.askopenfilename(
             title="Abrir archivo MicroC",
-            filetypes=[("Archivos C", "*.c *.C"), ("Todos", "*.*")])
+            filetypes=[("Archivos C", "*.c *.C *.cpp"), ("Todos", "*.*")])
         if not path:
             return
         try:
@@ -439,6 +829,7 @@ class MicroCCompiler(tk.Tk):
         except Exception as e:
             messagebox.showerror("ERROR", f"No se pudo abrir:\n{e}")
             return
+        self.Archivo      = content
         self.current_file = path
         self.is_new_file  = False
         self.is_editable  = False
@@ -451,6 +842,7 @@ class MicroCCompiler(tk.Tk):
         self._type_text(content, on_done=self._after_open)
 
     def _after_open(self):
+        self.Archivo = self.txt_editor.get("1.0", tk.END)
         self.txt_editor.config(state="disabled")
         self.lbl_modo.config(text="█ SOLO LECTURA", fg=NEON_PINK)
         self._update_line_numbers()
@@ -476,29 +868,50 @@ class MicroCCompiler(tk.Tk):
                     on_done()
         write()
 
-    def cmd_guardar(self):
+    def OpcGuardar_Click(self):
         content = self.txt_editor.get("1.0", tk.END)
         if self.is_new_file or not self.current_file:
-            path = filedialog.asksaveasfilename(
-                title="Guardar archivo MicroC",
-                defaultextension=".c",
-                filetypes=[("Archivos C", "*.c"), ("Todos", "*.*")])
-            if not path:
-                return
-            self.current_file = path
-            self.is_new_file  = False
-        else:
-            path = self.current_file
+            self.OpcGuardarComo_Click()
+            return
+        try:
+            with open(self.current_file, "w", encoding="utf-8") as f:
+                f.write(content)
+        except Exception as e:
+            messagebox.showerror("ERROR", f"No se pudo guardar:\n{e}")
+            return
+        self.Archivo     = content
+        self.is_modified = False
+        self._update_title()
+        self._set_status(f"GUARDADO: {self.current_file}")
+        self._log(f"\n> GUARDADO: {self.current_file}\n", "ok")
+
+    def OpcGuardarComo_Click(self):
+        path = filedialog.asksaveasfilename(
+            title="Guardar como",
+            defaultextension=".c",
+            filetypes=[("Archivos C", "*.c"), ("Todos", "*.*")])
+        if not path:
+            return
+        content = self.txt_editor.get("1.0", tk.END)
         try:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
         except Exception as e:
             messagebox.showerror("ERROR", f"No se pudo guardar:\n{e}")
             return
-        self.is_modified = False
+        self.Archivo      = content
+        self.current_file = path
+        self.is_new_file  = False
+        self.is_modified  = False
         self._update_title()
-        self._set_status(f"GUARDADO: {path}")
-        self._log(f"\n> ARCHIVO GUARDADO: {path}\n", "ok")
+        self._set_status(f"GUARDADO COMO: {path}")
+        self._log(f"\n> GUARDADO COMO: {path}\n", "ok")
+
+    def OpcSalir_Click(self):
+        if self.is_modified and not self._ask_save():
+            return
+        self._clock_running = False
+        self.destroy()
 
     def cmd_editar(self):
         self.txt_editor.config(state="normal")
@@ -507,97 +920,114 @@ class MicroCCompiler(tk.Tk):
         self._set_status("MODO EDICIÓN ACTIVADO >_")
         self._log("\n> EDICIÓN HABILITADA.\n", "info")
 
-    def cmd_compilar(self):
-        content = self.txt_editor.get("1.0", tk.END).strip()
-        if not content:
+    def compilarToolStripMenuItem_Click(self):
+        """
+        Flujo según diagrama Figura III:
+        1. Copiar TextBox1 en variable Archivo
+        2. Instanciar AnalizadorLexico (AL) y UnidadesLexicas (UL)
+        3. Llamar AL.AnalisisLexico(Archivo)
+        4. Guardar en ListToken
+        5. Escribir en TextBox2
+        """
+        # Paso 1
+        self.Archivo = self.txt_editor.get("1.0", tk.END).strip()
+        if not self.Archivo:
             self._log("\n> [ERROR] NO HAY CÓDIGO PARA COMPILAR.\n", "error")
             return
-        self._log("\n" + "═" * 44 + "\n", "dim")
+
+        self._limpiar_consola()
+        self._log("═" * 46 + "\n", "dim")
         self._log("▶ INICIANDO ANÁLISIS LÉXICO...\n", "accent")
-        self.after(150, lambda: self._run_analysis(content))
+        self._log("═" * 46 + "\n", "dim")
 
-    def _run_analysis(self, content):
-        lines       = content.split("\n")
-        errors      = []
-        warns       = []
-        brace_count = 0
-        tokens      = re.findall(r'\b\w+\b|[+\-*/=<>!&|;,(){}]', content)
+        # Paso 2
+        AL = AnalizadorLexico()
+        UL = UnidadesLexicas()
 
-        for i, line in enumerate(lines, 1):
-            s = line.strip()
-            if not s or s.startswith("//"):
-                continue
-            brace_count += s.count("{") - s.count("}")
-            if (s and
-                not s.endswith(("{", "}", ";", ":")) and
-                not s.startswith(("#", "//")) and
-                not s.endswith("*/")):
-                warns.append((i, f"Posible falta de ';'  →  {s[:45]}"))
+        # Pasos 3 y 4
+        ListToken = AL.AnalisisLexico(self.Archivo, UL)
 
-        if brace_count != 0:
-            errors.append(f"LLAVES DESBALANCEADAS: {abs(brace_count)} sin cerrar/abrir")
+        # Paso 5
+        self.after(100, lambda: self._mostrar_tokens(ListToken))
 
-        kw_count  = sum(1 for t in tokens if t in KEYWORDS)
-        num_count = sum(1 for t in tokens if re.match(r'^\d+$', t))
+    def _mostrar_tokens(self, ListToken: list):
+        """Escribe la tabla en TextBox2 — formato Figura V del PDF."""
+        self._log(f"\n{'LÍNEA':<10}{'LEXEMA':<22}{'TOKEN':<10}TIPO\n", "info")
+        self._log("─" * 55 + "\n", "dim")
 
-        self._log(f"\n  TOKENS TOTALES  : {len(tokens)}\n", "info")
-        self._log(f"  PALABRAS CLAVE  : {kw_count}\n",      "info")
-        self._log(f"  NÚMEROS         : {num_count}\n",      "info")
-        self._log(f"  ADVERTENCIAS    : {len(warns)}\n",     "warn")
-        self._log(f"  ERRORES         : {len(errors)}\n",    "error" if errors else "info")
-        self._log("\n", "dim")
+        errores = 0
+        for t in ListToken:
+            fila = (f"Linea: {t['linea']:<6}"
+                    f"Lexema: {t['lexema']:<18}"
+                    f"Token: {t['token']:<8}"
+                    f"{t['tipo']}\n")
 
-        if errors:
-            self._log("[ ERRORES ]\n", "error")
-            for e in errors:
-                self._log(f"  ✗ {e}\n", "error")
+            if t["token"] == -1:
+                self._log(fila, "err_tok")
+                errores += 1
+            elif t["tipo"] in ("COMENTARIO_LINEA","COMENTARIO_BLOQUE"):
+                self._log(fila, "com_tag")
+            elif t["tipo"] in ("PALABRA_RESERVADA","DIRECTIVA",
+                               "FUNCION_BIBLIOTECA","FUNCION_PRINCIPAL"):
+                self._log(fila, "kw")
+            elif t["tipo"] in ("NUMERO_ENTERO","NUMERO_REAL"):
+                self._log(fila, "num")
+            elif t["tipo"] == "IDENTIFICADOR":
+                self._log(fila, "id")
+            else:
+                self._log(fila, "sym")
 
-        if warns:
-            self._log("[ ADVERTENCIAS ]\n", "warn")
-            for ln, msg in warns[:10]:
-                self._log(f"  ⚠ Ln {ln:>3}: {msg}\n", "warn")
-            if len(warns) > 10:
-                self._log(f"  ... y {len(warns)-10} más.\n", "warn")
+        self._log("─" * 55 + "\n", "dim")
+        self._log(f"\n  TOTAL TOKENS    : {len(ListToken)}\n", "info")
+        self._log(f"  ERRORES LÉXICOS : {errores}\n",
+                  "error" if errores else "info")
 
-        if not errors and not warns:
-            self._log("  ✔ SIN ERRORES DETECTADOS.\n", "ok")
+        if errores == 0:
+            self._log("\n  ✔ ANÁLISIS LÉXICO COMPLETADO SIN ERRORES.\n", "ok")
+        else:
+            self._log(f"\n  ✗ {errores} SÍMBOLO(S) NO RECONOCIDO(S).\n", "error")
 
-        self._log("\n[ COMPILACIÓN COMPLETA EN PRÓXIMAS ENTREGAS ]\n", "dim")
-        self._log("═" * 44 + "\n", "dim")
+        self._log("═" * 46 + "\n", "dim")
+        self.lbl_tokens.config(text=f"TOKENS: {len(ListToken)}")
+        self._set_status(f"COMPILACIÓN COMPLETA — {len(ListToken)} tokens")
 
     def cmd_stats(self):
         content = self.txt_editor.get("1.0", tk.END)
         if not content.strip():
             self._log("\n> [STATS] Sin código para analizar.\n", "warn")
             return
+        AL = AnalizadorLexico()
+        UL = UnidadesLexicas()
+        ListToken = AL.AnalisisLexico(content, UL)
+        tipos = {}
+        for t in ListToken:
+            tipos[t["tipo"]] = tipos.get(t["tipo"], 0) + 1
         lines      = content.split("\n")
         total_ln   = len(lines)
         empty_ln   = sum(1 for l in lines if not l.strip())
         comment_ln = sum(1 for l in lines if l.strip().startswith("//"))
         code_ln    = total_ln - empty_ln - comment_ln
-        tokens     = re.findall(r'\b\w+\b|[+\-*/=<>!&|;,(){}]', content)
-        kw_used    = sorted(set(t for t in tokens if t in KEYWORDS))
 
-        self._log("\n" + "═" * 44 + "\n", "dim")
+        self._log("\n" + "═" * 46 + "\n", "dim")
         self._log("◈ ESTADÍSTICAS DEL CÓDIGO\n", "accent")
-        self._log(f"  Líneas totales  : {total_ln}\n",  "info")
-        self._log(f"  Líneas de código: {code_ln}\n",   "ok")
-        self._log(f"  Líneas vacías   : {empty_ln}\n",  "dim")
-        self._log(f"  Comentarios     : {comment_ln}\n","dim")
-        self._log(f"  Caracteres      : {len(content)}\n", "info")
-        self._log(f"  Palabras        : {len(content.split())}\n", "info")
-        self._log(f"  Tokens totales  : {len(tokens)}\n","info")
-        self._log(f"  Keywords usadas : {', '.join(kw_used) or 'ninguna'}\n", "warn")
-        self._log("═" * 44 + "\n", "dim")
+        self._log(f"  Líneas totales       : {total_ln}\n",      "info")
+        self._log(f"  Líneas de código     : {code_ln}\n",       "ok")
+        self._log(f"  Líneas vacías        : {empty_ln}\n",      "dim")
+        self._log(f"  Comentarios          : {comment_ln}\n",    "dim")
+        self._log(f"  Tokens totales       : {len(ListToken)}\n","info")
+        self._log("\n  DISTRIBUCIÓN:\n", "info")
+        for tipo, cant in sorted(tipos.items(), key=lambda x: -x[1]):
+            self._log(f"    {tipo:<28}: {cant}\n", "dim")
+        self._log("═" * 46 + "\n", "dim")
 
     def cmd_ayuda(self):
         win = tk.Toplevel(self)
-        win.title("AYUDA — MicroC Compiler")
-        win.geometry("520x480")
+        win.title("AYUDA — MicroC Compiler v2.0")
+        win.geometry("540x520")
         win.configure(bg=BG_MAIN)
         win.resizable(False, False)
         tk.Frame(win, bg=NEON_GREEN, height=2).pack(fill="x")
-        tk.Label(win, text="◈ AYUDA  —  MicroC Compiler v1.0",
+        tk.Label(win, text="◈ AYUDA  —  MicroC Compiler v2.0",
                  bg=BG_MAIN, fg=NEON_GREEN,
                  font=("Courier New", 13, "bold")).pack(pady=(16, 4))
         tk.Frame(win, bg=DIM_GREEN, height=1).pack(fill="x", padx=20, pady=6)
@@ -607,29 +1037,27 @@ class MicroCCompiler(tk.Tk):
         txt.pack(fill="both", expand=True, padx=10)
         txt.insert("1.0",
             "ATAJOS DE TECLADO:\n\n"
-            "  Ctrl+N  →  Nuevo archivo\n"
-            "  Ctrl+O  →  Abrir archivo .C\n"
-            "  Ctrl+S  →  Guardar\n"
-            "  Ctrl+E  →  Habilitar edición\n"
-            "  Ctrl+T  →  Estadísticas del código\n"
-            "  F5      →  Compilar / Análisis léxico\n\n"
-            "FUNCIONES ÚNICAS:\n\n"
-            "  • Resaltado de sintaxis en tiempo real\n"
-            "  • Numeración de líneas sincronizada\n"
-            "  • Contador de tokens en vivo\n"
-            "  • Reloj en tiempo real\n"
-            "  • Efecto typing al abrir archivos\n"
-            "  • Estadísticas detalladas (Ctrl+T)\n"
-            "  • Análisis léxico con reporte\n"
-            "  • Auto-indentación al presionar Enter\n\n"
-            "COLORES DE SINTAXIS:\n\n"
-            "  CIAN   →  Palabras clave\n"
-            "  ÁMBAR  →  Strings y operadores\n"
-            "  ROSA   →  Números\n"
-            "  VERDE  →  Directivas #include\n"
-            "  GRIS   →  Comentarios\n\n"
+            "  Ctrl+N        →  Nuevo archivo\n"
+            "  Ctrl+O        →  Abrir archivo .C\n"
+            "  Ctrl+S        →  Guardar\n"
+            "  Ctrl+Mayús+S  →  Guardar Como\n"
+            "  Ctrl+E        →  Habilitar edición\n"
+            "  Ctrl+T        →  Estadísticas\n"
+            "  F5            →  Compilar / Análisis léxico\n\n"
+            "CLASES IMPLEMENTADAS (diagrama UML):\n\n"
+            "  frmEditor        →  Interfaz gráfica\n"
+            "  UnidadesLexicas  →  Tabla de tokens\n"
+            "  AnalizadorLexico →  Motor léxico\n\n"
+            "COLORES EN TEXTBOX2:\n\n"
+            "  CIAN    →  Palabras reservadas / funciones\n"
+            "  ÁMBAR   →  Símbolos y operadores\n"
+            "  ROSA    →  Números enteros y reales\n"
+            "  BLANCO  →  Identificadores\n"
+            "  GRIS    →  Comentarios\n"
+            "  ROJO    →  Símbolo no encontrado\n\n"
             "Autómatas y Lenguajes  |  2026\n"
-            "Ing. Baudilio Boteo  |  Univ. Mesoamericana"
+            "Ing. Baudilio Boteo  |  Univ. Mesoamericana\n"
+            "Andrea Gonzalez  |  202425508"
         )
         txt.config(state="disabled")
         tk.Frame(win, bg=DIM_GREEN, height=1).pack(fill="x", padx=20, pady=6)
@@ -640,26 +1068,22 @@ class MicroCCompiler(tk.Tk):
 
     def cmd_acerca(self):
         messagebox.showinfo("Acerca de MicroC Compiler",
-            "MicroC Compiler v1.0\nPre-Compilador\n\n"
+            "MicroC Compiler v2.0\nAnalizador Léxico\n\n"
+            "Clases: frmEditor, AnalizadorLexico, UnidadesLexicas\n\n"
             "Universidad Mesoamericana\n"
             "Autómatas y Lenguajes — 2026\n"
             "Ing. Baudilio Boteo\n\n"
-            "Desarrollado en Python + Tkinter")
-
-    def cmd_salir(self):
-        if self.is_modified and not self._ask_save():
-            return
-        self._clock_running = False
-        self.destroy()
+            "Desarrollado en Python + Tkinter\n"
+            "Andrea Gonzalez — 202425508")
 
     # ──────────────────────────────────────────────────────
     def _ask_save(self):
         r = messagebox.askyesnocancel("CAMBIOS SIN GUARDAR",
-            "Tienes cambios sin guardar.\n¿Deseas guardar antes de continuar?")
+            "Tenés cambios sin guardar.\n¿Guardás antes de continuar?")
         if r is None:
             return False
         if r:
-            self.cmd_guardar()
+            self.OpcGuardar_Click()
         return True
 
     def _log(self, msg, style="ok"):
@@ -680,5 +1104,5 @@ class MicroCCompiler(tk.Tk):
 
 # ══════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    app = MicroCCompiler()
+    app = frmEditor()
     app.mainloop()

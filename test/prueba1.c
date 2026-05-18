@@ -5,6 +5,4 @@ int main() {
     int b = 10;
     printf("Suma: %d", a + b);
     return 0;
-    }
-    
-
+    }m

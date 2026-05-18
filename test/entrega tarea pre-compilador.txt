@@ -1,0 +1,6 @@
+
+https://github.com/agonz46/Compilador-MicroC-AndreaGonzalez
+
+Descripcion: Pre-Compilador MicroC desarrollado en Python con Tkinter. Incluye editor de código con resaltado de sintaxis en tiempo real, consola de resultados, manejo de archivos .C y análisis léxico básico. Se implementaron las funciones de Nuevo, Abrir, Guardar, Editar, Compilar, Estadísticas, Ayuda y Salir. Como extras se agregó numeración de líneas, contador de tokens en vivo, reloj en tiempo real y animación de typing al abrir archivos.
+
+https://docs.google.com/videos/d/1bQ2itUNfG70XEA_CDtziJY6sB7LPmkN_mMyYtSGPjrY/edit?usp=sharing
